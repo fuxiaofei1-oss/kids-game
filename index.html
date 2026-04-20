@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小朋友的学习乐园</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #87CEEB; font-family: sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; text-align: center; }
+        h1 { color: #FF6B6B; font-size: 36px; margin-bottom: 30px; }
+        .menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .menu-item { background: white; padding: 30px; border-radius: 15px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .menu-item:hover { transform: scale(1.05); transition: 0.2s; }
+        .识字 { background: #FFEAA7; color: #D35400; }
+        .算术 { background: #A8E6CF; color: #27AE60; }
+        .英语 { background: #D7BDE2; color: #8E44AD; }
+        .拼图 { background: #F5B7B1; color: #C0392B; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 小朋友的学习乐园 🎈</h1>
+        <div class="menu">
+            <div class="menu-item 识字" onclick="openModule('识字')">👶 识字练习</div>
+            <div class="menu-item 算术" onclick="openModule('算术')">🔢 算术挑战</div>
+            <div class="menu-item 英语" onclick="openModule('英语')">🅰️ 英语学习</div>
+            <div class="menu-item 拼图" onclick="openModule('拼图')">🧩 拼图游戏</div>
+        </div>
+    </div>
+    <script>
+        function openModule(name) {
+            alert(`打开${name}模块，后续可以在这里添加具体功能~`);
+        }
+    </script>
+</body>
+</html>
