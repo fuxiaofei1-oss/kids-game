@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 2026 前沿洞察</title>
+  <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/3.0.23/tailwind.min.js"></script>
+  <link href="https://fonts.loli.net/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', 'Inter', sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+    .slides-container {
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: #0a0a0a;
+    }
+    .slide {
+      width: 100%; height: 100%;
+      max-width: 450px; max-height: 800px;
+      aspect-ratio: 9/16;
+      position: absolute;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2.5rem;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      background: linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
+    }
+    .slide.active { opacity: 1; transform: translateX(0); }
+    .slide.prev { opacity: 0; transform: translateX(-100%); }
+    .light-spot {
+      position: absolute; border-radius: 50%;
+      filter: blur(100px); opacity: 0.3; pointer-events: none;
+    }
+    .ls-blue { width: 320px; height: 320px; background: #3b82f6; top: -120px; right: -120px; animation: f1 20s ease-in-out infinite; }
+    .ls-purple { width: 280px; height: 280px; background: #8b5cf6; bottom: -100px; left: -100px; animation: f2 25s ease-in-out infinite; }
+    .ls-cyan { width: 220px; height: 220px; background: #06b6d4; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: f3 18s ease-in-out infinite; }
+    .ls-pink { width: 250px; height: 250px; background: #ec4899; top: 20%; left: -80px; animation: f1 22s ease-in-out infinite reverse; }
+    .ls-amber { width: 200px; height: 200px; background: #f59e0b; bottom: 20%; right: -80px; animation: f2 23s ease-in-out infinite reverse; }
+    @keyframes f1 { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-50px,30px)} 50%{transform:translate(30px,50px)} 75%{transform:translate(50px,-20px)} }
+    @keyframes f2 { 0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,-40px)} 66%{transform:translate(-30px,30px)} }
+    @keyframes f3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.25)} }
+    .slide-content { position: relative; z-index: 10; text-align: center; width: 100%; }
+    .progress-bar {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px; z-index: 100;
+    }
+    .progress-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); cursor: pointer; transition: all 0.3s;
+    }
+    .progress-dot.active { background: #fff; transform: scale(1.4); }
+    .progress-dot:hover { background: rgba(255,255,255,0.6); }
+    .page-number {
+      position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+      font-size: 0.8rem; color: rgba(255,255,255,0.4); z-index: 100;
+      font-family: 'Inter', sans-serif;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.1em;
+    }
+    .num-big {
+      font-size: 5rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .num-big-red {
+      font-size: 5rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #f87171, #fb923c);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .num-big-cyan {
+      font-size: 5rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #22d3ee, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .list-item {
+      text-align: left;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.85);
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-label { color: #60a5fa; font-weight: 700; margin-right: 8px; }
+    .model-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .model-name { font-weight: 900; font-size: 1.1rem; margin-bottom: 4px; }
+    .model-desc { font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 300; }
+    .quote-mark {
+      font-size: 5rem; color: rgba(255,255,255,0.1);
+      font-family: 'Inter', serif; line-height: 0.5; margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="slides-container">
+
+  <!-- Slide 1: 封面 -->
+  <div class="slide active">
+    <div class="light-spot ls-blue"></div>
+    <div class="light-spot ls-purple"></div>
+    <div class="slide-content">
+      <div class="tag">2026 · 技术前沿</div>
+      <h1 class="text-6xl font-black mb-4 leading-tight">LLM<br>前沿洞察</h1>
+      <p class="text-lg font-light text-gray-400">下一代人工智能的技术革命</p>
+      <p class="text-sm font-light text-gray-600 mt-8">2026.07</p>
+    </div>
+  </div>
+
+  <!-- Slide 2: 断言 -->
+  <div class="slide">
+    <div class="light-spot ls-purple"></div>
+    <div class="light-spot ls-cyan"></div>
+    <div class="slide-content">
+      <div class="tag">时代拐点</div>
+      <h1 class="text-4xl font-black leading-tight mb-6">
+        世界模型<br><span style="color:#60a5fa">元年已至</span>
+      </h1>
+      <p class="text-base font-light text-gray-400 leading-relaxed">
+        从文本对话到理解物理世界<br>从"副驾驶"跃升为"总架构师"
+      </p>
+    </div>
+  </div>
+
+  <!-- Slide 3: 数字冲击 MoE -->
+  <div class="slide">
+    <div class="light-spot ls-blue"></div>
+    <div class="light-spot ls-pink"></div>
+    <div class="slide-content">
+      <div class="tag">架构革命</div>
+      <div class="num-big mb-4">83%</div>
+      <h2 class="text-2xl font-black mb-6">旗舰模型拥抱 MoE</h2>
+      <div class="list-item"><span class="list-label">DeepSeek</span>671B总参 / 仅激活37B</div>
+      <div class="list-item"><span class="list-label">成本</span>算力下降 60%~80%</div>
+      <div class="list-item"><span class="list-label">GLM 5.2</span>744B MoE 击败 GPT-5</div>
+    </div>
+  </div>
+
+  <!-- Slide 4: 三强对比 -->
+  <div class="slide">
+    <div class="light-spot ls-purple"></div>
+    <div class="light-spot ls-amber"></div>
+    <div class="slide-content">
+      <div class="tag">旗舰格局</div>
+      <h2 class="text-2xl font-black mb-5">三强争霸</h2>
+      <div class="model-card">
+        <div class="model-name" style="color:#60a5fa">GPT-5.6 Sol</div>
+        <div class="model-desc">750 tok/s · 150万上下文 · 世界模型</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name" style="color:#c084fc">Claude Fable 5</div>
+        <div class="model-desc">200万上下文 · 全自动工作流</div>
+      </div>
+      <div class="model-card">
+        <div class="model-name" style="color:#22d3ee">Gemini 3.0 Ultra</div>
+        <div class="model-desc">2000万上下文 · 原生多模态</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5: 金句 开源追平闭源 -->
+  <div class="slide">
+    <div class="light-spot ls-cyan"></div>
+    <div class="light-spot ls-blue"></div>
+    <div class="slide-content">
+      <div class="quote-mark">"</div>
+      <p class="text-2xl font-bold mb-6 leading-relaxed">开源模型性能<br>无限接近最强闭源</p>
+      <p class="text-base font-light text-gray-400 mb-4">Kimi K3 · DeepSeek-V4 · Qwen 3.8<br>国产旗舰集体爆发</p>
+      <span class="text-sm font-light text-gray-600">— 2026 WAIC</span>
+    </div>
+  </div>
+
+  <!-- Slide 6: 原生多模态 -->
+  <div class="slide">
+    <div class="light-spot ls-pink"></div>
+    <div class="light-spot ls-cyan"></div>
+    <div class="slide-content">
+      <div class="tag">多模态</div>
+      <h1 class="text-4xl font-black leading-tight mb-6">
+        原生统一<span style="color:#22d3ee">打破壁垒</span>
+      </h1>
+      <div class="list-item"><span class="list-label">文本</span>图像 · 音频 · 视频 · 3D</div>
+      <div class="list-item"><span class="list-label">视觉</span>图表 · 流程图 · UI 理解</div>
+      <div class="list-item"><span class="list-label">世界模型</span>720p 实时交互生成</div>
+    </div>
+  </div>
+
+  <!-- Slide 7: 数字 上下文 -->
+  <div class="slide">
+    <div class="light-spot ls-blue"></div>
+    <div class="light-spot ls-purple"></div>
+    <div class="slide-content">
+      <div class="tag">超长上下文</div>
+      <div class="num-big-cyan mb-4">150万</div>
+      <h2 class="text-2xl font-black mb-6">Tokens 一次读完</h2>
+      <p class="text-base font-light text-gray-400 leading-relaxed">
+        一整本百科全书<br>一整个代码仓库<br>一次对话全部记住
+      </p>
+    </div>
+  </div>
+
+  <!-- Slide 8: Agent -->
+  <div class="slide">
+    <div class="light-spot ls-amber"></div>
+    <div class="light-spot ls-pink"></div>
+    <div class="slide-content">
+      <div class="tag">智能体</div>
+      <h2 class="text-3xl font-black mb-6 leading-tight">
+        从工具调用<br><span style="color:#fb923c">到自主决策</span>
+      </h2>
+      <div class="list-item"><span class="list-label">OSWorld</span>GPT-5.3 达 64.7%</div>
+      <div class="list-item"><span class="list-label">跨软件</span>多步骤任务自动化</div>
+      <div class="list-item"><span class="list-label">长周期</span>异步执行 · 长程规划</div>
+    </div>
+  </div>
+
+  <!-- Slide 9: 数字冲击 成本 -->
+  <div class="slide">
+    <div class="light-spot ls-pink"></div>
+    <div class="light-spot ls-amber"></div>
+    <div class="slide-content">
+      <div class="tag">推理成本</div>
+      <div class="num-big-red mb-4">↓90%</div>
+      <h2 class="text-2xl font-black mb-6">API 价格以厘计价</h2>
+      <p class="text-base font-light text-gray-400 leading-relaxed">
+        4-bit 量化 8B 模型<br>仅需 5GB 显存<br>保留 97% 精度
+      </p>
+    </div>
+  </div>
+
+  <!-- Slide 10: 金句 端侧AI -->
+  <div class="slide">
+    <div class="light-spot ls-cyan"></div>
+    <div class="light-spot ls-purple"></div>
+    <div class="slide-content">
+      <div class="quote-mark">"</div>
+      <p class="text-2xl font-bold mb-6 leading-relaxed">手机即超算<br>离线AI成为标配</p>
+      <p class="text-base font-light text-gray-400 mb-4">13B 以下模型<br>消费级手机流畅运行</p>
+      <span class="text-sm font-light text-gray-600">— 2026 端侧元年</span>
+    </div>
+  </div>
+
+  <!-- Slide 11: 训练范式 -->
+  <div class="slide">
+    <div class="light-spot ls-blue"></div>
+    <div class="light-spot ls-cyan"></div>
+    <div class="slide-content">
+      <div class="tag">训练范式</div>
+      <h2 class="text-3xl font-black mb-6 leading-tight">
+        Scaling Law<br><span style="color:#34d399">王者归来</span>
+      </h2>
+      <div class="list-item"><span class="list-label">万卡集群</span>参数再上台阶</div>
+      <div class="list-item"><span class="list-label">混合训练</span>SFT+RLHF+DPO/KTO</div>
+      <div class="list-item"><span class="list-label">新架构</span>Mamba-Transformer 融合</div>
+    </div>
+  </div>
+
+  <!-- Slide 12: 结尾 -->
+  <div class="slide">
+    <div class="light-spot ls-blue"></div>
+    <div class="light-spot ls-purple"></div>
+    <div class="light-spot ls-cyan"></div>
+    <div class="slide-content">
+      <h1 class="text-4xl font-black mb-6 leading-tight">未来由你书写</h1>
+      <p class="text-lg font-light text-gray-400 mb-8">每个开发者<br>都站在智能革命之巅</p>
+      <div class="tag">Thank You</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="page-number" id="pageNumber">1 / 12</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progressBar');
+  const pageNumber = document.getElementById('pageNumber');
+  let current = 0;
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = `progress-dot ${i===0?'active':''}`;
+    dot.addEventListener('click', () => go(i));
+    progressBar.appendChild(dot);
+  });
+  function update() {
+    slides.forEach((s, i) => {
+      s.classList.remove('active','prev');
+      if (i === current) s.classList.add('active');
+      else if (i < current) s.classList.add('prev');
+    });
+    document.querySelectorAll('.progress-dot').forEach((d,i) => d.classList.toggle('active', i===current));
+    pageNumber.textContent = `${current+1} / ${slides.length}`;
+  }
+  function next() { if (current < slides.length-1) { current++; update(); } }
+  function prev() { if (current > 0) { current--; update(); } }
+  function go(i) { current = i; update(); }
+  document.addEventListener('keydown', e => {
+    if (e.key==='ArrowRight'||e.key===' ') next();
+    else if (e.key==='ArrowLeft') prev();
+  });
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    const d = tx - e.changedTouches[0].clientX;
+    if (Math.abs(d)>50) d>0 ? next() : prev();
+  });
+</script>
+</body>
+</html>
