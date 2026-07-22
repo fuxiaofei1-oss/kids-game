@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小魔法师 - LLM大揭秘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 40px;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+        
+        .slide.prev {
+            opacity: 0;
+            transform: translateX(-100px);
+        }
+        
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -4s;
+        }
+        
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -2s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        .title-main {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #a8b4ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .title-sub {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 300;
+            color: #9ca3af;
+            text-align: center;
+        }
+        
+        .content-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 90%;
+            width: 100%;
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .fun-fact {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin: 8px 0;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #667eea;
+            transform: translateX(10px);
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .timeline-year {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #667eea;
+            min-width: 100px;
+        }
+        
+        .timeline-content {
+            font-size: 1.1rem;
+            color: #d1d5db;
+        }
+        
+        .emoji-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+            text-align: center;
+        }
+        
+        .bullet-point {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+        
+        .bullet-point::before {
+            content: "✨";
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 24px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .page-indicator {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            z-index: 100;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+        }
+        
+        .grid-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s;
+        }
+        
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, rgba(245, 87, 108, 0.2) 0%, rgba(240, 147, 251, 0.2) 100%);
+            border-left: 4px solid #f5576c;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+            border-left: 4px solid #4facfe;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        
+        .safety-rule {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+        }
+        
+        .rule-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        
+        .highlight {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .big-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 900;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            font-size: 1.1rem;
+        }
+        
+        .comparison {
+            display: flex;
+            gap: 16px;
+            margin: 16px 0;
+        }
+        
+        .compare-item {
+            flex: 1;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .compare-no {
+            background: rgba(245, 87, 108, 0.15);
+            border: 2px solid rgba(245, 87, 108, 0.3);
+        }
+        
+        .compare-yes {
+            background: rgba(79, 172, 254, 0.15);
+            border: 2px solid rgba(79, 172, 254, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+            .content-card {
+                padding: 24px;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .comparison {
+                flex-direction: column;
+            }
+            .timeline-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            .timeline-year {
+                min-width: auto;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="presentation" id="presentation">
+        <!-- Slide 1: 封面 -->
+        <div class="slide active" data-slide="0">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+            <span class="big-emoji">🤖✨</span>
+            <h1 class="title-main">AI小魔法师</h1>
+            <p class="title-sub">大语言模型 LLM 大揭秘</p>
+            <p class="title-sub mt-8" style="margin-top: 40px; font-size: 1rem;">欢迎来到神奇的AI世界！</p>
+        </div>
+        
+        <!-- Slide 2: 什么是LLM -->
+        <div class="slide" data-slide="1">
+            <span class="emoji-icon">🎮</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">超级文字接龙大师</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.3rem; margin-bottom: 20px; text-align: center;">
+                    <span class="highlight">LLM</span> = Large Language Model（大语言模型）
+                </p>
+                <p style="font-size: 1.15rem; margin-bottom: 20px; text-align: center;">想象一个玩文字接龙的超级高手：</p>
+                <div class="bullet-point">你说"床前明月"，它接"<span class="highlight">光</span>"</div>
+                <div class="bullet-point">你说"春眠不觉"，它接"<span class="highlight">晓</span>"</div>
+                <div class="bullet-point">它能一个词一个词接下去，写成完整的故事、诗歌、答案！</div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: 趣味卡片 -->
+        <div class="slide" data-slide="2">
+            <span class="emoji-icon">💡</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">它读过多少书？</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="fun-fact">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 16px; color: #667eea;">📚 趣味知识卡片</h3>
+                    <p style="font-size: 1.1rem; line-height: 1.8;">LLM在训练时读过：</p>
+                    <div class="bullet-point">成千上万本<span class="highlight">书</span></div>
+                    <div class="bullet-point">无数的<span class="highlight">文章和网站</span></div>
+                    <div class="bullet-point">各种语言的<span class="highlight">文字资料</span></div>
+                    <p style="margin-top: 16px; font-size: 1.1rem; text-align: center; color: #9ca3af;">
+                        就像一个读过整个图书馆的超级学霸！🎓
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: 小测试 -->
+        <div class="slide" data-slide="3">
+            <span class="emoji-icon">🤔</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">AI能做什么？</h2>
+            <div class="content-card" style="margin-top: 20px;">
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 20px;">小测试：你觉得AI可以做到哪些？</p>
+                <div class="quiz-option">📖 写故事</div>
+                <div class="quiz-option">📝 做作业</div>
+                <div class="quiz-option">🎨 画画</div>
+                <div class="quiz-option">💬 聊天</div>
+                <div class="quiz-option">🌍 翻译</div>
+                <div class="quiz-option">💻 写代码</div>
+                <div class="quiz-option">🍳 做饭</div>
+                <div class="quiz-option">🎵 唱歌</div>
+                <p style="text-align: center; margin-top: 16px; color: #9ca3af; font-size: 0.95rem;">想一想，后面揭晓答案！</p>
+            </div>
+        </div>
+        
+        <!-- Slide 5: 时间线 -->
+        <div class="slide" data-slide="4">
+            <span class="emoji-icon">📅</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">GPT成长记</h2>
+            <div class="content-card" style="margin-top: 20px;">
+                <div class="timeline-item">
+                    <span class="timeline-year">2018</span>
+                    <span class="timeline-content">GPT-1出生（小宝宝👶）</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-year">2019</span>
+                    <span class="timeline-content">GPT-2上学（学更多📚）</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-year">2020</span>
+                    <span class="timeline-content">GPT-3长大（变聪明🧠）</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-year">2022</span>
+                    <span class="timeline-content">ChatGPT诞生（会聊天啦💬）</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-year">2023</span>
+                    <span class="timeline-content">GPT-4升级（更厉害🚀）</span>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-year">2024-25</span>
+                    <span class="timeline-content">多模态（能看能听👁️👂）</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Transformer -->
+        <div class="slide" data-slide="5">
+            <span class="emoji-icon">👀</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">会划重点的小眼睛</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.2rem; margin-bottom: 20px;"><span class="highlight">Transformer</span> 是LLM的大脑核心</p>
+                <p style="font-size: 1.1rem; margin-bottom: 20px;">它有一种超能力——"注意力机制"</p>
+                <p style="font-size: 1.1rem; margin-bottom: 16px;">就像你读书时用荧光笔划重点：</p>
+                <div class="bullet-point">重要的句子画<span class="highlight">亮色</span></div>
+                <div class="bullet-point">不重要的轻轻带过</div>
+                <div class="success-box" style="margin-top: 20px;">
+                    <p style="font-size: 1.05rem;">AI也能自动找到句子里最重要的词！🖍️</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: 自注意力 -->
+        <div class="slide" data-slide="6">
+            <span class="emoji-icon">🎉</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">词语的社交派对</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.15rem; margin-bottom: 20px;">想象一句话里的每个词都是一个小朋友：</p>
+                <p style="font-size: 1.5rem; text-align: center; margin-bottom: 24px; font-weight: 700; color: #667eea;">"小猫追老鼠"</p>
+                <div class="bullet-point">"小猫"看着"追"（谁在追？🐱）</div>
+                <div class="bullet-point">"追"看着"老鼠"（追什么？🐭）</div>
+                <div class="bullet-point">"老鼠"看着"小猫"（被谁追？）</div>
+                <div class="fun-fact" style="margin-top: 20px;">
+                    <p style="font-size: 1.05rem;">每个词都和其他词"交朋友"，这就是<span class="highlight">自注意力</span>！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 8: 多头注意力 -->
+        <div class="slide" data-slide="7">
+            <span class="emoji-icon">👁️👁️👁️</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">好多双小眼睛</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.2rem; margin-bottom: 20px;">不止一双"眼睛"！有好多双"小眼睛"：</p>
+                <div class="grid-2">
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">🎭</span>
+                        <p style="margin-top: 8px;">谁做了动作？<br><span style="color: #9ca3af; font-size: 0.9rem;">（主语）</span></p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">🏃</span>
+                        <p style="margin-top: 8px;">做了什么？<br><span style="color: #9ca3af; font-size: 0.9rem;">（谓语）</span></p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">⏰</span>
+                        <p style="margin-top: 8px;">什么时候？<br><span style="color: #9ca3af; font-size: 0.9rem;">（时间）</span></p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">📍</span>
+                        <p style="margin-top: 8px;">在哪里？<br><span style="color: #9ca3af; font-size: 0.9rem;">（地点）</span></p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; color: #9ca3af;">好多双眼睛一起看，理解更准确！</p>
+            </div>
+        </div>
+        
+        <!-- Slide 9: 学习三部曲 -->
+        <div class="slide" data-slide="8">
+            <span class="emoji-icon">🎓</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">AI怎么学习？</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 24px;">三个步骤：</p>
+                <div class="step-item">
+                    <span class="step-number">1</span>
+                    <span><span class="highlight">读书</span>：阅读海量文字（学习阶段）📖</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">2</span>
+                    <span><span class="highlight">练习</span>：不断做填空题（训练阶段）✏️<br><span style="color: #9ca3af; font-size: 0.95rem; margin-left: 52px;">"今天天气真__" → 猜"好"</span></span>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">3</span>
+                    <span><span class="highlight">回答</span>：学会后回答你的问题（使用阶段）💬</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 10: Token -->
+        <div class="slide" data-slide="9">
+            <span class="emoji-icon">🧩</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">词语小碎片</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.15rem; margin-bottom: 20px;">AI不直接读整个单词，它把句子切成小碎片（<span class="highlight">Token</span>）：</p>
+                <div class="success-box" style="margin-bottom: 16px;">
+                    <p style="font-size: 1.1rem; text-align: center;">中文："大象" → "大" + "象" 🐘</p>
+                </div>
+                <div class="success-box" style="margin-bottom: 16px;">
+                    <p style="font-size: 1.1rem; text-align: center;">英文："elephant" → "ele" + "phant"</p>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 1.1rem;">
+                    🥪 就像把三明治切成小块，更容易"消化"！
+                </p>
+            </div>
+        </div>
+        
+        <!-- Slide 11: 训练过程 -->
+        <div class="slide" data-slide="10">
+            <span class="emoji-icon">👶➡️🎓</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">从婴儿到学霸</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="step-item">
+                    <span class="step-number">1</span>
+                    <span>读很多很多文字（像婴儿学说话）👶</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">2</span>
+                    <span>猜下一个词，猜错就调整 🤔</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">3</span>
+                    <span>重复<span class="highlight">亿万次</span>，越猜越准 🎯</span>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">4</span>
+                    <span>学会人类语言的规律 📚</span>
+                </div>
+                <div class="warning-box" style="margin-top: 20px;">
+                    <p style="font-size: 1.05rem;">⚠️ 它不背诵，它学习<span class="highlight">模式</span>！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 12: AI像什么 -->
+        <div class="slide" data-slide="11">
+            <span class="emoji-icon">🤔</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">AI像什么？</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="comparison">
+                    <div class="compare-item compare-no">
+                        <p style="font-size: 1.5rem;">❌</p>
+                        <p style="margin-top: 8px;">不是人脑<br><span style="color: #9ca3af; font-size: 0.9rem;">（虽然叫"神经网络"）</span></p>
+                    </div>
+                    <div class="compare-item compare-no">
+                        <p style="font-size: 1.5rem;">❌</p>
+                        <p style="margin-top: 8px;">不是万能的神<br><span style="color: #9ca3af; font-size: 0.9rem;">（它也会犯错）</span></p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin: 16px 0; font-size: 1.1rem;">✅ AI更像：</p>
+                <div class="grid-2" style="grid-template-columns: 1fr 1fr;">
+                    <div class="grid-item">🎮 超级文字接龙高手</div>
+                    <div class="grid-item">📖 博览群书的助手</div>
+                    <div class="grid-item">🌍 会说多语言的翻译官</div>
+                    <div class="grid-item">🤝 随时聊天的好朋友</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 13: 学习助手 -->
+        <div class="slide" data-slide="12">
+            <span class="emoji-icon">📚</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">学习好伙伴</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="bullet-point">解答不会的数学题（<span class="highlight">讲思路</span>，不直接给答案）</div>
+                <div class="bullet-point">陪你练习英语口语 🗣️</div>
+                <div class="bullet-point">解释科学知识（"为什么天是蓝的？"）🌌</div>
+                <div class="bullet-point">帮你修改作文，提供好词好句 ✍️</div>
+                <div class="bullet-point">制作学习计划，整理知识点 📋</div>
+                <div class="success-box" style="margin-top: 20px;">
+                    <p style="font-size: 1.05rem;">💡 AI是学习助手，但你才是学习的主人！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 14: 创意小伙伴 -->
+        <div class="slide" data-slide="13">
+            <span class="emoji-icon">🎨</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">创意魔法师</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="grid-2">
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">📖</span>
+                        <p style="margin-top: 8px;">写睡前故事、童话、科幻小说</p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">🎭</span>
+                        <p style="margin-top: 8px;">一起编剧本、角色扮演</p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">🎵</span>
+                        <p style="margin-top: 8px;">写诗歌、儿歌、顺口溜</p>
+                    </div>
+                    <div class="grid-item">
+                        <span style="font-size: 2rem;">🖼️</span>
+                        <p style="margin-top: 8px;">想画画灵感，生成图片</p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 1.1rem;">
+                    ✨ 和AI一起，让想象力起飞！
+                </p>
+            </div>
+        </div>
+        
+        <!-- Slide 15: 生活帮手 -->
+        <div class="slide" data-slide="14">
+            <span class="emoji-icon">🌟</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">生活小助手</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="bullet-point">推荐好吃的菜谱 🍳</div>
+                <div class="bullet-point">制定旅行计划 ✈️</div>
+                <div class="bullet-point">帮写祝福卡片、邮件 💌</div>
+                <div class="bullet-point">翻译各国语言 🌍</div>
+                <div class="bullet-point">解答生活小常识 💡</div>
+                <div class="bullet-point">讲故事、说笑话 😄</div>
+                <p style="text-align: center; margin-top: 20px; color: #9ca3af;">
+                    AI让生活更方便！
+                </p>
+            </div>
+        </div>
+        
+        <!-- Slide 16: 答案揭晓 -->
+        <div class="slide" data-slide="15">
+            <span class="emoji-icon">🎉</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">猜对了吗？</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="success-box" style="margin-bottom: 16px;">
+                    <p style="font-size: 1.1rem;">✅ AI能做的：</p>
+                    <p style="margin-top: 8px; padding-left: 20px;">写故事、聊天、翻译、写代码、画画</p>
+                </div>
+                <div class="warning-box" style="margin-bottom: 16px;">
+                    <p style="font-size: 1.1rem;">❌ AI不能真的：</p>
+                    <p style="margin-top: 8px; padding-left: 20px;">做饭、唱歌（但能写歌词！）</p>
+                </div>
+                <div class="fun-fact">
+                    <p style="font-size: 1.1rem;">⚠️ AI能辅助做作业，但要<span class="highlight">自己思考</span>哦！</p>
+                    <p style="font-size: 1rem; color: #9ca3af; margin-top: 8px;">现在的AI还能看图片、看视频（多模态能力）👁️</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 17: 魔法咒语 -->
+        <div class="slide" data-slide="16">
+            <span class="emoji-icon">🪄</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">魔法咒语</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.2rem; margin-bottom: 20px;"><span class="highlight">Prompt</span> = 魔法咒语</p>
+                <p style="font-size: 1.1rem; margin-bottom: 20px;">你对AI说的话就是"咒语"，咒语越清楚，魔法越灵验！</p>
+                <div class="comparison">
+                    <div class="compare-item compare-no">
+                        <p style="font-size: 1.2rem;">❌ 模糊</p>
+                        <p style="margin-top: 8px; font-size: 1.1rem;">"写个故事"</p>
+                    </div>
+                    <div class="compare-item compare-yes">
+                        <p style="font-size: 1.2rem;">✅ 清楚</p>
+                        <p style="margin-top: 8px; font-size: 1.1rem;">"写一个100字的小兔子冒险故事，要开心有趣"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 18: 咒语五要素 -->
+        <div class="slide" data-slide="17">
+            <span class="emoji-icon">🎯</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">咒语五要素</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.1rem; margin-bottom: 20px; text-align: center;">告诉AI五个"W"：</p>
+                <div class="bullet-point"><span class="highlight">Who（谁）</span>：要它扮演什么角色？</div>
+                <div class="bullet-point"><span class="highlight">What（什么）</span>：具体要做什么？</div>
+                <div class="bullet-point"><span class="highlight">How（怎样）</span>：什么格式/风格/长度？</div>
+                <div class="bullet-point"><span class="highlight">Why（为什么）</span>：给它背景信息</div>
+                <div class="bullet-point"><span class="highlight">约束</span>：什么不能做？</div>
+                <div class="success-box" style="margin-top: 20px;">
+                    <p style="font-size: 1.05rem; text-align: center;">🎮 练习：试着说一个完美的咒语！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 19: 会犯错 -->
+        <div class="slide" data-slide="18">
+            <span class="emoji-icon">🤥</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">AI不是万能的</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <div class="warning-box">
+                    <p style="font-size: 1.2rem; margin-bottom: 16px;">AI也会"一本正经胡说八道"：</p>
+                    <div class="bullet-point">它可能编造不存在的<span class="highlight">事实</span></div>
+                    <div class="bullet-point">它不知道实时新闻（训练数据有<span class="highlight">截止日期</span>）</div>
+                    <div class="bullet-point">它数学可能算错</div>
+                    <div class="bullet-point">它不理解人类的<span class="highlight">情感</span></div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 1.1rem;">
+                    这叫"<span class="highlight">幻觉</span>"（Hallucination）<br>
+                    <span style="color: #9ca3af;">所以AI说的话要自己判断！</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Slide 20: 安全规则 -->
+        <div class="slide" data-slide="19">
+            <span class="emoji-icon">🛡️</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">安全使用AI</h2>
+            <div class="content-card" style="margin-top: 20px;">
+                <p style="font-size: 1.1rem; text-align: center; margin-bottom: 16px;">记住这几条：</p>
+                <div class="safety-rule">
+                    <span class="rule-number">1</span>
+                    <span>不告诉AI<span class="highlight">个人信息</span>（姓名、地址、学校）</span>
+                </div>
+                <div class="safety-rule">
+                    <span class="rule-number">2</span>
+                    <span>不依赖AI<span class="highlight">写作业</span>（它只是助手，你才是主人）</span>
+                </div>
+                <div class="safety-rule">
+                    <span class="rule-number">3</span>
+                    <span>AI说的话要<span class="highlight">验证</span>（不确定就问爸妈老师）</span>
+                </div>
+                <div class="safety-rule">
+                    <span class="rule-number">4</span>
+                    <span>善待AI（不用它<span class="highlight">欺负别人</span>）</span>
+                </div>
+                <div class="safety-rule">
+                    <span class="rule-number">5</span>
+                    <span>控制时间（多去<span class="highlight">户外玩</span>！）🌳</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 21: 未来 -->
+        <div class="slide" data-slide="20">
+            <span class="emoji-icon">🚀</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">未来的AI</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.15rem; margin-bottom: 20px; text-align: center;">AI还在快速进化：</p>
+                <div class="bullet-point">能看、能听、能说（<span class="highlight">多模态</span>）👁️👂🗣️</div>
+                <div class="bullet-point">能控制机器人（AI+硬件）🤖</div>
+                <div class="bullet-point">能帮科学家<span class="highlight">发明新药</span> 💊</div>
+                <div class="bullet-point">能帮助<span class="highlight">保护环境</span> 🌍</div>
+                <div class="bullet-point">可能成为每个人的AI伙伴 🤝</div>
+                <div class="success-box" style="margin-top: 20px;">
+                    <p style="font-size: 1.1rem; text-align: center;">✨ 未来由<span class="highlight">你们</span>创造！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 22: 你也可以 -->
+        <div class="slide" data-slide="21">
+            <span class="emoji-icon">👩‍💻</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">你也能做AI</h2>
+            <div class="content-card" style="margin-top: 30px;">
+                <p style="font-size: 1.15rem; margin-bottom: 20px; text-align: center;">小朋友也可以：</p>
+                <div class="bullet-point">学习编程（Scratch、Python）💻</div>
+                <div class="bullet-point">了解AI原理（<span class="highlight">就像今天这样！</span>）🧠</div>
+                <div class="bullet-point">思考AI能解决什么问题 🤔</div>
+                <div class="bullet-point">保持<span class="highlight">好奇心</span>和<span class="highlight">想象力</span> 🌟</div>
+                <div class="fun-fact" style="margin-top: 24px;">
+                    <p style="font-size: 1.2rem; text-align: center; font-weight: 700;">
+                        也许未来的伟大AI发明家就是<span class="highlight">你</span>！🏆
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 23: 总结 -->
+        <div class="slide" data-slide="22">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <span class="emoji-icon">📖</span>
+            <h2 class="title-main" style="font-size: clamp(2rem, 6vw, 3.5rem);">记住这几点</h2>
+            <div class="content-card" style="margin-top: 20px;">
+                <div class="bullet-point">LLM是超级<span class="highlight">文字接龙</span>大师</div>
+                <div class="bullet-point">它用<span class="highlight">注意力机制</span>理解语言</div>
+                <div class="bullet-point">它通过读很多书来<span class="highlight">学习</span></div>
+                <div class="bullet-point"><span class="highlight">清晰的提示词</span>效果更好</div>
+                <div class="bullet-point">AI很厉害但也会<span class="highlight">犯错</span></div>
+                <div class="bullet-point"><span class="highlight">安全使用</span>，保持思考</div>
+            </div>
+            <p style="margin-top: 30px; font-size: 1.5rem;">谢谢观看！🎉</p>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="prevSlide()">←</button>
+        <span class="page-indicator" id="pageIndicator">1 / 23</span>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()">→</button>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 23;
+        const slides = document.querySelectorAll('.slide');
+        
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index < currentSlide) {
+                    slide.classList.add('prev');
+                }
+            });
+            
+            document.getElementById('pageIndicator').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            document.getElementById('progressBar').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+        
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+        
+        // Touch support
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        });
+        
+        updateSlide();
+    </script>
+</body>
+</html>
